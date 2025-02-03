@@ -23,47 +23,52 @@ namespace Service
                     throw new Exception("OpenAI API key is missing. Set it in Vercel environment variables.");
                 }
             }
- 
+
 
 
         public async Task<string> GetChatResponse(string prompt)
         {
-        var requestBody = new
-        {
-            model = "gpt-3.5-turbo",
-            messages = new[]
+            var requestBody = new
             {
-                    new { role = "system", content = "You are a helpful assistant." },
-                    new { role = "user", content = prompt }
-                },
-            max_tokens = 200
-        };
+                model = "gpt-3.5-turbo",
+                messages = new[]
+                {
+            new
+            {
+                role = "system",
+                content = "You are an SQL expert. Translate the following natural language query into SQL code. Provide only the SQL code in your response."
+            },
+            new { role = "user", content = prompt }
+        },
+                max_tokens = 200
+            };
 
-        var content = new StringContent(
-            JsonSerializer.Serialize(requestBody),
-            Encoding.UTF8,
-            "application/json");
+            var content = new StringContent(
+                JsonSerializer.Serialize(requestBody),
+                Encoding.UTF8,
+                "application/json");
 
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
 
-        var response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
+            var response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
 
-        if (response.IsSuccessStatusCode)
-        {
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var jsonResponse = JsonSerializer.Deserialize<JsonDocument>(responseContent);
-            return jsonResponse.RootElement
-                .GetProperty("choices")[0]
-                .GetProperty("message")
-                .GetProperty("content")
-                .GetString();
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var jsonResponse = JsonSerializer.Deserialize<JsonDocument>(responseContent);
+                return jsonResponse.RootElement
+                    .GetProperty("choices")[0]
+                    .GetProperty("message")
+                    .GetProperty("content")
+                    .GetString();
+            }
+            else
+            {
+                throw new HttpRequestException($"Error: {response.StatusCode}");
+            }
         }
-        else
-        {
-            throw new HttpRequestException($"Error: {response.StatusCode}");
-        }
+
     }
-}
 }
 
