@@ -7,22 +7,21 @@ using System.Threading.Tasks;
 
 namespace Service
 {
-    public class ChatGPTService
+    public class ChatGPTService : IChatGPTService
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
 
-     public ChatGPTService(HttpClient httpClient, IConfiguration configuration)
+     public ChatGPTService(HttpClient httpClient)
          {
             _httpClient = httpClient;
-            _apiKey = Environment.GetEnvironmentVariable("OpenAI_ApiKey")
-                        ?? configuration["OpenAI:ApiKey"]; // Fallback to appsettings.json
+            _apiKey = Environment.GetEnvironmentVariable("OpenAI_ApiKey"); 
 
              if (string.IsNullOrEmpty(_apiKey))
                 {
-                    throw new Exception("OpenAI API key is missing. Set it in Vercel environment variables.");
-                }
+                throw new Exception("OpenAI API key is missing. Set it in environment variables.");
             }
+        }
 
 
 
@@ -36,7 +35,8 @@ namespace Service
             new
             {
                 role = "system",
-                content = "You are an SQL expert. Translate the following natural language query into SQL code. Provide only the SQL code in your response."
+                content = "You are an SQL expert. Translate the following natural language query into SQL code. " +
+                "Provide only the SQL code in your response."
             },
             new { role = "user", content = prompt }
         },
