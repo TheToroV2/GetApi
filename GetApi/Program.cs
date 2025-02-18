@@ -1,23 +1,17 @@
-using Service;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
+using Service; // Import your service namespace
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Get API Key from configuration
-var apiKey = builder.Configuration["OpenAI:ApiKey"];
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddHttpClient<ChatGPTService>(client =>
-{
-    client.BaseAddress = new Uri("https://api.openai.com/");
-});
-
-// Register ChatGPTService with API Key
-builder.Services.AddSingleton(provider =>
-{
-    var httpClient = provider.GetRequiredService<HttpClient>();
-    return new ChatGPTService(httpClient, apiKey);
-});
+// Register HttpClient and your service
+builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+builder.Services.AddScoped<IGeminiService, GeminiService>();
 
 var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
 app.Run();
